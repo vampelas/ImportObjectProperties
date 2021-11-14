@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  
+  <Fragment>
+    <!-- Product Components -->
+    
+    <ComponentGroup Id="ProductComponents" >
+      
+      <!-- Test File -->
+      <ComponentRef Id ="MainAppShortcut" />
+      
+    </ComponentGroup>
+    
+    <!-- Installed Files -->
+    <DirectoryRef Id="INSTALLFOLDER" FileSource="..\bin\debug\net472\win-$(var.Platform)\publish\">
+      
+      <Component Id="MainAppShortcut" Guid="{502C73A1-90DC-4052-8773-4DD0E83F5D3C}">
+
+        <Shortcut Id="MainAppShortcut"
+                  Name="!(loc.ProductName_$(var.Platform))"
+                  Target="[INSTALLFOLDER]ImportObjectProperties.exe"
+                  Directory="InstallProgramMenuFolder"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="icon.ico"
+                  />
+        
+        <!-- Our unique key for this component/shortcut -->
+        <RegistryValue Id="RegShortcutKey" Root="HKCU" Key="SOFTWARE\!(loc.ProductNameFolder)"
+                       Name="Shortcut" Value="1" Type="integer" KeyPath="yes" />
+        
+        <!-- Remove Start Menu Items -->
+        <RemoveFolder Id="RemoveStartMenu" Directory="InstallProgramMenuFolder" On="uninstall" />
+        
+      </Component>
+      
+    </DirectoryRef>
+
+  </Fragment>
+  
+  
+</Wix>

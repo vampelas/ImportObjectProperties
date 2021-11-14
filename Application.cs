@@ -13,6 +13,7 @@ using AWS = Autodesk.Connectivity.WebServices;
 using log4net;
 using log4net.Config;
 using Serilog;
+using Serilog.Sinks.File;
 using Serilog.Core;
 using Serilog.Sinks.File.Header;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -98,9 +99,10 @@ namespace ImportObjectProperties
                     "{Timestamp:yyyy-MM-dd HH:mm:ss} [{ThreadId}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .Enrich.With<ExceptionEnricher>()
                 .Enrich.WithThreadId()
-                .WriteTo.RollingFile(@".\Logs\ImportObjectProperties-{Date}.txt", retainedFileCountLimit: 10, outputTemplate:
+                .WriteTo.File(@"_Logs\ImportObjectProperties-.log", retainedFileCountLimit: 10, encoding: Encoding.UTF8,
+                rollingInterval: RollingInterval.Day, outputTemplate:
                     "{Timestamp:HH:mm:ss} [{ThreadId}] [{Level:u3}] {Message:lj} {EscapedException}{NewLine}")
-                .WriteTo.File(@".\Logs\ImportObjectProperties-.csv", retainedFileCountLimit: 10, encoding: Encoding.UTF8, hooks: new HeaderWriter(headerFactory),
+                .WriteTo.File(@"_Logs\ImportObjectProperties-.csv", retainedFileCountLimit: 10, encoding: Encoding.UTF8, hooks: new HeaderWriter(headerFactory),
                     rollingInterval: RollingInterval.Day, outputTemplate:
                     "\"{Timestamp:yyyy-MM-dd HH:mm:ss}\",\"[{ThreadId}]\",\"[{Level:u3}]\",\"{Message:lj}\",\"{EscapedException}\"{NewLine}");
 
@@ -124,7 +126,10 @@ namespace ImportObjectProperties
         public static void PrintHeader()
         {
             SeriLog.LogInformation($"ImportObjectProperties v{Assembly.GetExecutingAssembly().GetName().Version.ToString()} - imports property values from a CSV file");
-            SeriLog.LogInformation("Copyright (c) 2018 Autodesk, Inc. All rights reserved.");
+            SeriLog.LogInformation("Copyright (c) 2021 Autodesk, Inc. All rights reserved.");
+            SeriLog.LogInformation("Modified By: Vas Ampelas");
+            SeriLog.LogInformation("Uses Serilog logger to produce logs for Console, Text, and CSV files.");
+            SeriLog.LogInformation("https://github.com/vampelas/ImportObjectProperties.git");
             SeriLog.LogInformation("");
 
             //Console.WriteLine("ImportObjectProperties v{0} - imports property values from a CSV file",
@@ -135,7 +140,10 @@ namespace ImportObjectProperties
 
         public static void PrintHelp()
         {
-            SeriLog.LogInformation("Usage: ImportObjectProperties [-t File|Item|CustEnt] [-a Vault|Windows] [-s srv] [-db dbase] [-u user] [-p pwd] [-l d] [-e codepage|name] filename");
+            SeriLog.LogInformation("Usage: ImportObjectProperties:");
+            SeriLog.LogInformation("1. Run Command Prompt Windows (As Administrator)...");
+            SeriLog.LogInformation("2. Navigate to ImportObjectProperties Install Dir.");
+            SeriLog.LogInformation("[-t File|Item|CustEnt] [-a Vault|Windows] [-s srv] [-db dbase] [-u user] [-p pwd] [-l d] filename [-e codepage|name]");
             SeriLog.LogInformation("  -t                Type of object whose properties are being imported (default = File).");
             SeriLog.LogInformation("  -a                Authentication type (default = Vault).");
             SeriLog.LogInformation("  -s                Name of server (default = localhost).");
@@ -143,10 +151,10 @@ namespace ImportObjectProperties
             SeriLog.LogInformation("  -u                UserName for access to database (default = Administrator).");
             SeriLog.LogInformation("  -p                Password for access to database (default = empty password).");
             SeriLog.LogInformation("  -l                Logging level (d = Debug).");
-            SeriLog.LogInformation("  -e                Encoding. Provide either codepage or name. (default = UTF-8).");
             SeriLog.LogInformation("  filename          CSV File which contains property values.");
+            SeriLog.LogInformation("  -e                Encoding. Provide either codepage or name. (default = UTF-8).");
 
-            //Console.WriteLine("Usage: ImportObjectProperties [-t File|Item|CustEnt] [-a Vault|Windows] [-s srv] [-db dbase] [-u user] [-p pwd] [-l d] [-e codepage|name] filename");
+            //Console.WriteLine("Usage: ImportObjectProperties [-t File|Item|CustEnt] [-a Vault|Windows] [-s srv] [-db dbase] [-u user] [-p pwd] [-l d] filename [-e codepage|name]");
             //Console.WriteLine("  -t                Type of object whose properties are being imported (default = File).");
             //Console.WriteLine("  -a                Authentication type (default = Vault).");
             //Console.WriteLine("  -s                Name of server (default = localhost).");
@@ -216,7 +224,7 @@ namespace ImportObjectProperties
 
                 SeriLog.LogInformation($"Input file: '{filename}'");
                 SeriLog.LogInformation($"  Number of rows: '{table.Rows.Count}'");
-                SeriLog.LogInformation("");
+                //SeriLog.LogInformation("");
                 //Log(MessageCategory.Info, "Input file: '{0}'", filename);
                 //Log(MessageCategory.Info, "  Number of rows: '{0}'", table.Rows.Count);
                 //Log(MessageCategory.Info, "");
@@ -257,13 +265,12 @@ namespace ImportObjectProperties
                 try
                 {
                     string fileName = Convert.ToString(row[kFileNameTag]);
-                    
+                    SeriLog.LogInformation("");
                     SeriLog.LogInformation($"[{table.Rows.IndexOf(row) + 1}/{table.Rows.Count}]: Processing file '{fileName}'...");
-
                     //Log(MessageCategory.Info, "[{0}/{1}]: Processing file '{2}'...",
                     //    table.Rows.IndexOf(row) + 1, table.Rows.Count, fileName);
                     ProcessFileRow(fileName, row);
-                    SeriLog.LogInformation("");
+                    //SeriLog.LogInformation("");
                     //Log(MessageCategory.Info, "");
                 }
                 catch (Exception ex)
@@ -272,6 +279,7 @@ namespace ImportObjectProperties
                     SeriLog.LogDebug($"Source: {VDF.Library.ExceptionParser.GetMessage(ex)}");
                     SeriLog.LogDebug($"StackTrace: {ex.Source}");
                     SeriLog.LogDebug($"Target: {ex.TargetSite}");
+                    //SeriLog.LogInformation("");
                     //Log(MessageCategory.Error, "ERROR: {0}", VDF.Library.ExceptionParser.GetMessage(ex));
                     //Log(MessageCategory.Debug, " Source: {0}", ex.Source);
                     //Log(MessageCategory.Debug, " StackTrace: {0}", ex.StackTrace);
@@ -288,11 +296,11 @@ namespace ImportObjectProperties
                 try
                 {
                     string itemNumber = Convert.ToString(row[kItemNumberTag]);
-
+                    SeriLog.LogInformation("");
                     SeriLog.LogInformation($"[{table.Rows.IndexOf(row) + 1}/{table.Rows.Count}]: Processing item '{itemNumber}'...");
                     //Log(MessageCategory.Info, "[{0}/{1}]: Processing item '{2}'...", table.Rows.IndexOf(row) + 1, table.Rows.Count, itemNumber);
                     ProcessItemRow(itemNumber, row);
-                    SeriLog.LogInformation("");
+                    //SeriLog.LogInformation("");
                     //Log(MessageCategory.Info, "");
                 }
                 catch (Exception ex)
@@ -301,6 +309,7 @@ namespace ImportObjectProperties
                     SeriLog.LogDebug($"Source: {ex.Source}");
                     SeriLog.LogDebug($"StackTrace: {ex.StackTrace}");
                     SeriLog.LogDebug($"Target: {ex.TargetSite}");
+                    //SeriLog.LogInformation("");
                     //Log(MessageCategory.Error, "ERROR: {0}", VDF.Library.ExceptionParser.GetMessage(ex));
                     //Log(MessageCategory.Debug, " Source: " + ex.Source);
                     //Log(MessageCategory.Debug, " StackTrace: " + ex.StackTrace);
@@ -317,12 +326,12 @@ namespace ImportObjectProperties
                 try
                 {
                     string name = Convert.ToString(row[kEntityNameTag]);
-
+                    SeriLog.LogInformation("");
                     SeriLog.LogInformation($"[{table.Rows.IndexOf(row) + 1}/{table.Rows.Count}]: Processing entity '{name}'...");
                     //Log(MessageCategory.Info, "[{0}/{1}]: Processing entity '{2}'...",
                     //    table.Rows.IndexOf(row) + 1, table.Rows.Count, name);
                     ProcessEntityRow(row);
-                    SeriLog.LogInformation("");
+                    //SeriLog.LogInformation("");
                     //Log(MessageCategory.Info, "");
                 }
                 catch (Exception ex)
@@ -331,7 +340,7 @@ namespace ImportObjectProperties
                     SeriLog.LogDebug($"Source: {ex.Source}");
                     SeriLog.LogDebug($"StackTrace: {ex.StackTrace}");
                     SeriLog.LogDebug($"Target: {ex.TargetSite}");
-
+                    //SeriLog.LogInformation("");
                     //Log(MessageCategory.Error, "ERROR: {0}", ex.Message);
                     //Log(MessageCategory.Debug, " Source: {0}", ex.Source);
                     //Log(MessageCategory.Debug, " StackTrace: {0}", ex.StackTrace);
@@ -412,7 +421,7 @@ namespace ImportObjectProperties
             if (file.CheckedOut == true)
             {
                 SeriLog.LogError(new Exception("File is checked out"), fileName);
-                SeriLog.LogInformation("");
+                //SeriLog.LogInformation("");
                 //throw new Exception("File is checked out.");
             }
             if (file.Locked == true)
@@ -476,7 +485,7 @@ namespace ImportObjectProperties
                     SeriLog.LogError(new Exception("Error when updating file properties: " + VDF.Library.ExceptionParser.GetMessage(ex)), "");
                     //throw new Exception("Error when updating file properties: " + VDF.Library.ExceptionParser.GetMessage(ex));
                 }
-                SeriLog.LogInformation($"Imported properties: {propertyValues.Count}");
+                SeriLog.LogInformation($"Successfully Imported properties: {propertyValues.Count}");
                 //log.Info($"Imported properties: {propertyValues.Count}");
                 //Console.WriteLine("Imported properties: {0}", propertyValues.Count);
             }
@@ -1364,13 +1373,13 @@ namespace ImportObjectProperties
             {
                 
                 SeriLog.LogError(new Exception("File not found"), name);
-                SeriLog.LogInformation("");
+                //SeriLog.LogInformation("");
                 //throw new Exception("File not found.");
             }
             if (files.Length != 1)
             {
-                SeriLog.LogError(new Exception("File name is not unique."), "");
-                SeriLog.LogInformation("");
+                SeriLog.LogError(new Exception("File name is not unique."), name);
+                //SeriLog.LogInformation("");
                 //throw new Exception("File name is not unique.");
             }
             return files[0];
@@ -1386,7 +1395,7 @@ namespace ImportObjectProperties
             if (result == null)
             {
                 SeriLog.LogError(new Exception("File not found"), fileName);
-                SeriLog.LogInformation("");
+                //SeriLog.LogInformation("");
                 //log.Debug(fileName, new Exception("File not found"));
                 //throw new Exception("File not found.");
             }
@@ -1405,7 +1414,7 @@ namespace ImportObjectProperties
                 }
             }
             SeriLog.LogError(new Exception("File not found"), fileName);
-            SeriLog.LogInformation("");
+            //SeriLog.LogInformation("");
             //log.Debug(fileName, new Exception("File not found"));
             throw new Exception("File not found.");
         }

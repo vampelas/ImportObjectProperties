@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	
+  <!-- Give Product a Unique ID per Platform -->
+  <?if $(var.Platform)=x64?>
+    <?define ProductCode = "{82B3C7C9-0979-4993-B514-ED4E3C069CA7}" ?>
+   <?else?>
+    <?define ProductCode = "{AB3BB572-15A5-4800-BFB6-76C9671D00AF}" ?>
+  <?endif?>
+
+  <!-- Fixed Upgrade ID -->
+  <?define UpgradeCode = "{A745D3CC-CFFC-4EE5-95DB-20C510C6D6A4}" ?>
+
+  <!--<?define BuildVersion = 9.0.2.0 ?>-->
+
+  <!-- Define Main Product -->
+  <Product Id="$(var.ProductCode)" 
+           Name="!(loc.ProductName_$(var.Platform))" 
+           Language="!(loc.Language)" 
+           Version="$(var.BuildVersion)" 
+           Manufacturer="!(loc.Company)" 
+           UpgradeCode="$(var.UpgradeCode)">
+    <!-- Provide Package Detail -->
+		<Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Platform="$(var.Platform)"
+             Manufacturer="!(loc.Company)"
+             Description="!(loc.Description)"
+             Keywords="!(loc.Keywords)"
+             Comments="!(loc.Comments)"
+             Languages="!(loc.Language)"
+             />
+
+		<!-- Downgrade Error Messag -->
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
+    
+    <!-- Include .cab file into .msi file -->
+		<MediaTemplate 
+      EmbedCab="yes"
+      />
+    
+    <!-- Define Main App Icon -->
+    <Icon Id="icon.ico" SourceFile="$(var.ImportObjectProperties.ProjectDir)\Icons\app.ico" />
+    
+    <!-- Use the app.ico icon for this installer (shows up in the Add/Remove Programs -->
+    <Property Id ="ARPPRODUCTICON">icon.ico</Property>
+    <!-- Hyperlink to site -->
+    <Property Id ="ARPURLINFOABOUT">https://github.com/vampelas/ImportObjectProperties.git</Property>
+    
+    <!-- Create a basic UI for the Installer -->
+    <UIRef Id="WixUI_Minimal"/>
+    <!--Left Image (*.bmp): 493 x 312
+        Banner (*.bmp): 493 x 58-->
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\Assets\Left_Image_2.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\Assets\Banner.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\Assets\License.rtf" />
+    
+    <!-- Define Components, SHortcuts, files, etc. for installer -->
+		<Feature Id="ProductFeature" Title="ImportObjectProperties" Level="1">
+      
+			<ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="PublishedComponents" />
+      
+		</Feature>
+    
+	</Product>
+</Wix>
